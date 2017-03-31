@@ -1,11 +1,14 @@
 Option Explicit
 On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.2 (2017/03/24)
+'#│  自動サーチ v0.0.3 (2017/03/31)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/03/31 -> v0.0.3
+'#  IEがフリーズ時の処理追加
+'# 
 '# 2017/03/24 -> v0.0.2
 '#  IEがフリーズ時の処理追加
 '# 
@@ -43,6 +46,7 @@ Set CMN = CreateObject( "Scripting.Dictionary" )
 Call CMN.Add("URL",  "https://pmap.kuku.lu/#") ' P-GO SEARCH URL
 Call CMN.Add("BTN",  "area_buttonsearch") ' サーチボタンID
 Call CMN.Add("WAIT",120*1000) ' サーチ後待機秒
+Call CMN.Add("READ",5*1000) ' 読込待機秒
 Call CMN.Add("IE",   True) ' IEを表示するか、表示：True, 非表示：False
 Call CMN.Add("LIST", "list.csv") ' サーチする座標が書かれたテキストファイル
 
@@ -125,17 +129,14 @@ Function Main()
 		ie.Visible = CMN("IE")
 		ie.Navigate CMN("URL") & latArray(i) & "," & lngArray(i)
 
-		b = 0
-		Do While ie.Busy = True Or ie.ReadyState <> 4 Or b < 50
-			WScript.Sleep 100
-			b = b + 1
-		Loop
+		WScript.Sleep CMN("READ")
 
 		Set elm = ie.document.getElementById(CMN("BTN"))
 		elm.Click
 		WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & CStr(i+1) & "行目(" & latArray(i) & "," & lngArray(i) & ") "
-		WScript.Sleep CMN("WAIT")
+		WScript.Sleep CMN("WAIT") - CMN("READ")
 		ie.Quit
+		Set ie = Nothing
 
 		If Err.Number <> 0 Then
 			WScript.Echo "エラー番号 " & CStr(Err.Number) & " " & Err.Description
