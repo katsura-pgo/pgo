@@ -1,11 +1,14 @@
 Option Explicit
 On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.3 (2017/03/31)
+'#│  自動サーチ v0.0.4 (2017/04/18)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/04/18 -> v0.0.4
+'#  csvファイルの３列目に名前を追加
+'# 
 '# 2017/03/31 -> v0.0.3
 '#  IEがフリーズ時の処理追加
 '# 
@@ -17,7 +20,7 @@ On Error Resume Next
 '# 
 '# [ 使い方 ]
 '#  このファイルを同階層にlist.csvというテキストファイルを置いてください。
-'#  list.csvにはサーチしたい場所をカンマ区切りで緯度,経度を書きます。
+'#  list.csvにはサーチしたい場所をカンマ区切りで緯度,経度,名前を書きます。
 '#  一行一箇所になりますので、二箇所目は二行目に書きます。
 '#  list.csvができたら、このファイルをダブルクリックして実行してください。
 '#  ＩＥは非表示状態で裏で動いていますので、別のウィンドウでピゴサの状況を確認してください。
@@ -38,17 +41,17 @@ On Error Resume Next
 '#
 '#==============================================================================
 '# 設定値をここに記載する。
-Dim CMN
-Set CMN = CreateObject( "Scripting.Dictionary" )
+Dim Conf
+Set Conf = CreateObject( "Scripting.Dictionary" )
 
 '#-- [ 基本設定 ] --------------------------------------------------------------
 
-Call CMN.Add("URL",  "https://pmap.kuku.lu/#") ' P-GO SEARCH URL
-Call CMN.Add("BTN",  "area_buttonsearch") ' サーチボタンID
-Call CMN.Add("WAIT",120*1000) ' サーチ後待機秒
-Call CMN.Add("READ",5*1000) ' 読込待機秒
-Call CMN.Add("IE",   True) ' IEを表示するか、表示：True, 非表示：False
-Call CMN.Add("LIST", "list.csv") ' サーチする座標が書かれたテキストファイル
+Conf.Add "URL",  "https://pmap.kuku.lu/#" ' P-GO SEARCH URL
+Conf.Add "BTN",  "area_buttonsearch" ' サーチボタンID
+Conf.Add "WAIT", 120*1000 ' サーチ後待機秒
+Conf.Add "READ", 5*1000 ' 読込待機秒
+Conf.Add "IE",   True ' IEを表示するか、表示：True, 非表示：False
+Conf.Add "LIST", "list.csv" ' サーチする座標が書かれたテキストファイル
 
 '#==============================================================================
 '# グローバル変数宣言, 設定値結合, ライブラリ読込
@@ -98,11 +101,12 @@ Function Main()
 	Dim	strLine
 	Dim	arrFields
 
-	Dim latArray, lngArray
+	Dim latArray, lngArray, nameArray
 	Set latArray = CreateObject("System.Collections.ArrayList")
 	Set lngArray = CreateObject("System.Collections.ArrayList")
+	Set nameArray = CreateObject("System.Collections.ArrayList")
 
-	Set objStream = fso.OpenTextFile(CMN("LIST"), 1)
+	Set objStream = fso.OpenTextFile(Conf("LIST"), 1)
 	Dim i
 	i = 0
 	Do Until objStream.AtEndOfStream
@@ -110,6 +114,7 @@ Function Main()
 		arrFields = Split(strLine,",")
 		latArray.add arrFields(0)
 		lngArray.add arrFields(1)
+		nameArray.add arrFields(2)
 		i = i + 1
 	Loop
 	Dim r: r = latArray.Count
@@ -126,15 +131,15 @@ Function Main()
 
 	Do
 		Set ie = CreateObject("InternetExplorer.Application")
-		ie.Visible = CMN("IE")
-		ie.Navigate CMN("URL") & latArray(i) & "," & lngArray(i)
+		ie.Visible = Conf("IE")
+		ie.Navigate Conf("URL") & latArray(i) & "," & lngArray(i)
 
-		WScript.Sleep CMN("READ")
+		WScript.Sleep Conf("READ")
 
-		Set elm = ie.document.getElementById(CMN("BTN"))
+		Set elm = ie.document.getElementById(Conf("BTN"))
 		elm.Click
-		WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & CStr(i+1) & "行目(" & latArray(i) & "," & lngArray(i) & ") "
-		WScript.Sleep CMN("WAIT") - CMN("READ")
+		WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & nameArray(i) & "(" & CStr(i+1) & "行目) "
+		WScript.Sleep Conf("WAIT") - Conf("READ")
 		ie.Quit
 		Set ie = Nothing
 
