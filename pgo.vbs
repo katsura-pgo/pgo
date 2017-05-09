@@ -1,11 +1,14 @@
 Option Explicit
 On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.4 (2017/04/18)
+'#│  自動サーチ v0.0.5 (2017/05/09)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/05/09 -> v0.0.5
+'#  サーチ開始時刻、サーチ終了時刻、サーチ実行曜日を追加
+'# 
 '# 2017/04/18 -> v0.0.4
 '#  csvファイルの３列目に名前を追加
 '# 
@@ -38,6 +41,9 @@ On Error Resume Next
 '#  普段IEを使っていない方は、一度IEを手動で起動して、初期メッセージなどが表示されないか確認をしてください。
 '#  また一度、ピゴサにアクセスして、ポケモンやポケストップの表示を全部非表示にします。
 '#  自動サーチではサーチボタンが押せればいいだけなので、極力処理を早くするためです。
+'# 
+'# [ 時間の指定 ]
+'#  時間の指定がしたい場合は基本設定を変更してください。
 '#
 '#==============================================================================
 '# 設定値をここに記載する。
@@ -52,6 +58,17 @@ Conf.Add "WAIT", 120*1000 ' サーチ後待機秒
 Conf.Add "READ", 5*1000 ' 読込待機秒
 Conf.Add "IE",   True ' IEを表示するか、表示：True, 非表示：False
 Conf.Add "LIST", "list.csv" ' サーチする座標が書かれたテキストファイル
+
+Conf.Add "START", "00:00" ' サーチ開始時刻
+Conf.Add "END",   "24:00" ' サーチ終了時刻
+
+Conf.Add "WD1", True ' 日曜日に実行するか、実行：True, 非実行：False
+Conf.Add "WD2", True ' 月曜日に実行するか、実行：True, 非実行：False
+Conf.Add "WD3", True ' 火曜日に実行するか、実行：True, 非実行：False
+Conf.Add "WD4", True ' 水曜日に実行するか、実行：True, 非実行：False
+Conf.Add "WD5", True ' 木曜日に実行するか、実行：True, 非実行：False
+Conf.Add "WD6", True ' 金曜日に実行するか、実行：True, 非実行：False
+Conf.Add "WD7", True ' 土曜日に実行するか、実行：True, 非実行：False
 
 '#==============================================================================
 '# グローバル変数宣言, 設定値結合, ライブラリ読込
@@ -129,32 +146,64 @@ Function Main()
 	i = 0
 	n = 1
 
+	Dim staSec, endSec, nowSec
+	staSec = DaySecond(Conf("START"))
+	endSec = DaySecond(Conf("END"))
+
+	Dim offFlg: offFlg = False
+
 	Do
-		Set ie = CreateObject("InternetExplorer.Application")
-		ie.Visible = Conf("IE")
-		ie.Navigate Conf("URL") & latArray(i) & "," & lngArray(i)
+		nowSec = DaySecond(CStr(Hour(Now))&":"&CStr(Minute(Now)))
+		If staSec =< nowSec And endSec > nowSec And Conf("WD"&CStr(Weekday(Now))) Then
+			offFlg = False
 
-		WScript.Sleep Conf("READ")
+			Set ie = CreateObject("InternetExplorer.Application")
+			ie.Visible = Conf("IE")
+			ie.Navigate Conf("URL") & latArray(i) & "," & lngArray(i)
 
-		Set elm = ie.document.getElementById(Conf("BTN"))
-		elm.Click
-		WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & nameArray(i) & "(" & CStr(i+1) & "行目) "
-		WScript.Sleep Conf("WAIT") - Conf("READ")
-		ie.Quit
-		Set ie = Nothing
+			WScript.Sleep Conf("READ")
 
-		If Err.Number <> 0 Then
-			WScript.Echo "エラー番号 " & CStr(Err.Number) & " " & Err.Description
-			Err.Clear
-			WScript.Sleep 5000
+			Set elm = ie.document.getElementById(Conf("BTN"))
+			elm.Click
+			WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & nameArray(i) & "(" & CStr(i+1) & "行目) "
+			WScript.Sleep Conf("WAIT") - Conf("READ")
+			ie.Quit
+			Set ie = Nothing
+
+			If Err.Number <> 0 Then
+				WScript.Echo "エラー番号 " & CStr(Err.Number) & " " & Err.Description
+				Err.Clear
+				WScript.Sleep 5000
+			Else
+				i = i + 1
+				n = n + 1
+				If i = r Then: i = 0: End If
+			End If
 		Else
-			i = i + 1
-			n = n + 1
-			If i = r Then: i = 0: End If
+			If Not offFlg Then
+				WScript.Echo "サーチ実行時刻になるまで待機中です。"
+				offFlg = True
+			End If
 		End If
+
 	Loop
 
 	Main = True
 '#------------------------------------------------------------------------------
 End Function
 
+' 秒に変換
+Function DaySecond(c)
+	Dim	cFields, h, m, s
+	cFields = Split(c, ":")
+	h = CInt(cFields(0))
+	m = CInt(cFields(1))
+	s = 0
+
+	Dim t:t = 0
+	t = t + (h*3600)
+	t = t + (m*60)
+	t = t + s
+	DaySecond = t
+'#------------------------------------------------------------------------------
+End Function
