@@ -1,11 +1,14 @@
 Option Explicit
 On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.5 (2017/05/09)
+'#│  自動サーチ v0.0.6 (2017/05/13)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/05/13 -> v0.0.6
+'#  サーチ開始時刻よりサーチ終了時刻の方が早い場合の処理を追加
+'# 
 '# 2017/05/09 -> v0.0.5
 '#  サーチ開始時刻、サーチ終了時刻、サーチ実行曜日を追加
 '# 
@@ -59,7 +62,7 @@ Conf.Add "READ", 5*1000 ' 読込待機秒
 Conf.Add "IE",   True ' IEを表示するか、表示：True, 非表示：False
 Conf.Add "LIST", "list.csv" ' サーチする座標が書かれたテキストファイル
 
-Conf.Add "START", "00:00" ' サーチ開始時刻
+Conf.Add "START", "0:00" ' サーチ開始時刻
 Conf.Add "END",   "24:00" ' サーチ終了時刻
 
 Conf.Add "WD1", True ' 日曜日に実行するか、実行：True, 非実行：False
@@ -154,7 +157,10 @@ Function Main()
 
 	Do
 		nowSec = DaySecond(CStr(Hour(Now))&":"&CStr(Minute(Now)))
-		If staSec =< nowSec And endSec > nowSec And Conf("WD"&CStr(Weekday(Now))) Then
+		If (_
+			(staSec < endSec And staSec =< nowSec And endSec > nowSec) OR _
+			(staSec > endSec And (staSec =< nowSec Or endSec > nowSec))_
+		) And Conf("WD"&CStr(Weekday(Now))) Then
 			offFlg = False
 
 			Set ie = CreateObject("InternetExplorer.Application")
