@@ -1,11 +1,14 @@
 Option Explicit
 On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.6 (2017/05/13)
+'#│  自動サーチ v0.0.7 (2017/05/14)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/05/14 -> v0.0.7
+'#  ピゴサのボタンのIDが変わったので変更
+'# 
 '# 2017/05/13 -> v0.0.6
 '#  サーチ開始時刻よりサーチ終了時刻の方が早い場合の処理を追加
 '# 
@@ -61,7 +64,7 @@ Set Conf = CreateObject( "Scripting.Dictionary" )
 '#-- [ 基本設定 ] --------------------------------------------------------------
 
 Conf.Add "URL",  "https://pmap.kuku.lu/#" ' P-GO SEARCH URL
-Conf.Add "BTN",  "area_buttonsearch" ' サーチボタンID
+Conf.Add "BTN",  "area_buttonresearch" ' サーチボタンID
 Conf.Add "WAIT", 120*1000 ' サーチ後待機秒
 Conf.Add "READ", 5*1000 ' 読込待機秒
 Conf.Add "IE",   True ' IEを表示するか、表示：True, 非表示：False
