@@ -67,7 +67,7 @@ Set Conf = CreateObject( "Scripting.Dictionary" )
 '#-- [ 基本設定 ] --------------------------------------------------------------
 
 Conf.Add "URL",  "https://pmap.kuku.lu/#" ' P-GO SEARCH URL
-Conf.Add "BTN",  "area_buttonresearch_" ' サーチボタンID
+Conf.Add "BTN",  "area_buttonresearch" ' サーチボタンID
 Conf.Add "WAIT", 120*1000 ' サーチ後待機秒
 Conf.Add "READ", 5*1000 ' 読込待機秒
 Conf.Add "IE",   True ' IEを表示するか、表示：True, 非表示：False
@@ -167,7 +167,7 @@ Function Main()
 	Dim offFlg: offFlg = False
 	Dim re, m
 	Set re = new regexp
-	re.Pattern = Conf("BTN") & "[a-zA-Z0-9]+"
+	re.Pattern = Conf("BTN") & "_[a-zA-Z0-9]+"
 
 	Do
 		nowSec = DaySecond(CStr(Hour(Now))&":"&CStr(Minute(Now)))
