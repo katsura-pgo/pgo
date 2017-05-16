@@ -1,11 +1,14 @@
 Option Explicit
 On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.7 (2017/05/14)
+'#│  自動サーチ v0.0.8 (2017/05/16)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/05/16 -> v0.0.8
+'#  ピゴサのボタンのIDが変わったので変更
+'# 
 '# 2017/05/14 -> v0.0.7
 '#  ピゴサのボタンのIDが変わったので変更
 '# 
@@ -64,7 +67,7 @@ Set Conf = CreateObject( "Scripting.Dictionary" )
 '#-- [ 基本設定 ] --------------------------------------------------------------
 
 Conf.Add "URL",  "https://pmap.kuku.lu/#" ' P-GO SEARCH URL
-Conf.Add "BTN",  "area_buttonresearch" ' サーチボタンID
+Conf.Add "BTN",  "area_buttonresearch_" ' サーチボタンID
 Conf.Add "WAIT", 120*1000 ' サーチ後待機秒
 Conf.Add "READ", 5*1000 ' 読込待機秒
 Conf.Add "IE",   True ' IEを表示するか、表示：True, 非表示：False
@@ -162,6 +165,9 @@ Function Main()
 	endSec = DaySecond(Conf("END"))
 
 	Dim offFlg: offFlg = False
+	Dim re, m
+	Set re = new regexp
+	re.Pattern = Conf("BTN") & "[a-zA-Z0-9]+"
 
 	Do
 		nowSec = DaySecond(CStr(Hour(Now))&":"&CStr(Minute(Now)))
@@ -177,7 +183,8 @@ Function Main()
 
 			WScript.Sleep Conf("READ")
 
-			Set elm = ie.document.getElementById(Conf("BTN"))
+			Set m = re.Execute(ie.Document.Body.InnerHtml)
+			Set elm = ie.document.getElementById(m(0).Value)
 			elm.Click
 			WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & nameArray(i) & "(" & CStr(i+1) & "行目) "
 			WScript.Sleep Conf("WAIT") - Conf("READ")
