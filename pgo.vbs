@@ -1,11 +1,13 @@
 Option Explicit
-On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.9 (2017/06/06)
+'#│  自動サーチ v0.0.10 (2017/06/06)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/06/06 -> v0.0.10
+'#  エラー処理を変更
+'# 
 '# 2017/06/06 -> v0.0.9
 '#  ピゴサのボタンのIDが変わったので変更
 '# 
@@ -170,7 +172,7 @@ Function Main()
 	Dim offFlg: offFlg = False
 	Dim re, m
 	Set re = new regexp
-	re.Pattern = Conf("BTN") & "_[a-zA-Z0-9]*"
+	re.Pattern = Conf("BTN") & "[_a-zA-Z0-9]*"
 
 	Do
 		nowSec = DaySecond(CStr(Hour(Now))&":"&CStr(Minute(Now)))
@@ -180,29 +182,36 @@ Function Main()
 		) And Conf("WD"&CStr(Weekday(Now))) Then
 			offFlg = False
 
+			On Error Resume Next
 			Set ie = CreateObject("InternetExplorer.Application")
-			ie.Visible = Conf("IE")
-			ie.Navigate Conf("URL") & latArray(i) & "," & lngArray(i)
+			If Err.Number = 0 Then
+				ie.Visible = Conf("IE")
+				ie.Navigate Conf("URL") & latArray(i) & "," & lngArray(i)
+				WScript.Sleep Conf("READ")
 
-			WScript.Sleep Conf("READ")
+				Set m = re.Execute(ie.Document.Body.InnerHtml)
+				If Err.Number = 0 Then
+					If m.Count = 0 Then
+						WScript.Echo "サーチボタンが見つかりません。"
+					Else
+						Set elm = ie.document.getElementById(m(0).Value)
+						If Err.Number = 0 Then
+							elm.Click
+							WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & nameArray(i) & "(" & CStr(i+1) & "行目) "
+							i = i + 1
+							n = n + 1
+							If i = r Then: i = 0: End If
+							WScript.Sleep Conf("WAIT") - Conf("READ")
+						Else: Err.Clear: End If
+					End If
+				Else: Err.Clear: End If
+				ie.Quit
+				If Err.Number = 0 Then
+					Set ie = Nothing
+				Else: Err.Clear: End If
+			Else: Err.Clear: End If
+			On Error GoTo 0
 
-			Set m = re.Execute(ie.Document.Body.InnerHtml)
-			Set elm = ie.document.getElementById(m(0).Value)
-			elm.Click
-			WScript.Echo "サーチ：" & CStr(n) & "回目(" & Time & ") " & nameArray(i) & "(" & CStr(i+1) & "行目) "
-			WScript.Sleep Conf("WAIT") - Conf("READ")
-			ie.Quit
-			Set ie = Nothing
-
-			If Err.Number <> 0 Then
-				WScript.Echo "エラー番号 " & CStr(Err.Number) & " " & Err.Description
-				Err.Clear
-				WScript.Sleep 5000
-			Else
-				i = i + 1
-				n = n + 1
-				If i = r Then: i = 0: End If
-			End If
 		Else
 			If Not offFlg Then
 				WScript.Echo "サーチ実行時刻になるまで待機中です。"
