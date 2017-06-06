@@ -1,11 +1,14 @@
 Option Explicit
 On Error Resume Next
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.8 (2017/05/16)
+'#│  自動サーチ v0.0. (2017/06/06)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/06/06 -> v0.0.9
+'#  ピゴサのボタンのIDが変わったので変更
+'# 
 '# 2017/05/16 -> v0.0.8
 '#  ピゴサのボタンのIDが変わったので変更
 '# 
@@ -167,7 +170,7 @@ Function Main()
 	Dim offFlg: offFlg = False
 	Dim re, m
 	Set re = new regexp
-	re.Pattern = Conf("BTN") & "_[a-zA-Z0-9]+"
+	re.Pattern = Conf("BTN") & "_[a-zA-Z0-9]*"
 
 	Do
 		nowSec = DaySecond(CStr(Hour(Now))&":"&CStr(Minute(Now)))
