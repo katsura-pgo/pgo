@@ -1,10 +1,13 @@
 Option Explicit
 '#┌──────────────────────────────────────
-'#│  自動サーチ v0.0.10 (2017/06/06)
+'#│  自動サーチ v0.0.11 (2017/06/09)
 '#│  pgo.vbs
 '#└──────────────────────────────────────
 '#
 '# [ 更新履歴 ]
+'# 2017/06/09 -> v0.0.11
+'#  エラー処理を変更
+'# 
 '# 2017/06/06 -> v0.0.10
 '#  エラー処理を変更
 '# 
@@ -170,6 +173,7 @@ Function Main()
 	endSec = DaySecond(Conf("END"))
 
 	Dim offFlg: offFlg = False
+	Dim btnFlg: btnFlg = False
 	Dim re, m
 	Set re = new regexp
 	re.Pattern = Conf("BTN") & "[_a-zA-Z0-9]*"
@@ -192,8 +196,12 @@ Function Main()
 				Set m = re.Execute(ie.Document.Body.InnerHtml)
 				If Err.Number = 0 Then
 					If m.Count = 0 Then
-						WScript.Echo "サーチボタンが見つかりません。"
+						If Not btnFlg Then
+							WScript.Echo "サーチボタンが見つかりません。"
+							btnFlg = True
+						End If
 					Else
+						btnFlg = False
 						Set elm = ie.document.getElementById(m(0).Value)
 						If Err.Number = 0 Then
 							elm.Click
@@ -206,10 +214,9 @@ Function Main()
 					End If
 				Else: Err.Clear: End If
 				ie.Quit
-				If Err.Number = 0 Then
-					Set ie = Nothing
-				Else: Err.Clear: End If
+				If Err.Number <> 0 Then: Err.Clear: End If
 			Else: Err.Clear: End If
+			ie = Nothing
 			On Error GoTo 0
 
 		Else
